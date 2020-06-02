@@ -58,8 +58,9 @@ public:
 	std::vector<HANDLE> hThreads;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 //	afx_msg void OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDeltaposSpin2(NMHDR* pNMHDR, LRESULT* pResult);
+//	afx_msg void OnDeltaposSpin2(NMHDR* pNMHDR, LRESULT* pResult);
 //	afx_msg void OnNMThemeChangedSpin1(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult);
+//	afx_msg void OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnNMOutofmemorySpin2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };

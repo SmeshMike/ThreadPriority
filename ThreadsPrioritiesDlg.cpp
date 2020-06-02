@@ -14,7 +14,7 @@
 
 #define IDC_TIMER 5000
 #define NUM_OF_THRS 2
-int __stdcall ThreadFunc(int number);
+void* __stdcall ThreadFunc(int number);
 
 // CAboutDlg dialog used for App About
 
@@ -55,6 +55,8 @@ END_MESSAGE_MAP()
 
 CThreadsPrioritiesDlg::CThreadsPrioritiesDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_THREADSPRIORITIES_DIALOG, pParent)
+	, priority1(0)
+	, priority2(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -85,10 +87,11 @@ BEGIN_MESSAGE_MAP(CThreadsPrioritiesDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SLEEP1, &CThreadsPrioritiesDlg::OnBnClickedSleep1)
 	ON_WM_TIMER()
 //	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CThreadsPrioritiesDlg::OnDeltaposSpin1)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN2, &CThreadsPrioritiesDlg::OnDeltaposSpin2)
+//	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN2, &CThreadsPrioritiesDlg::OnDeltaposSpin2)
 //	ON_NOTIFY(NM_THEMECHANGED, IDC_SPIN1, &CThreadsPrioritiesDlg::OnNMThemeChangedSpin1)
-ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CThreadsPrioritiesDlg::OnDeltaposSpin1)
+//ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CThreadsPrioritiesDlg::OnDeltaposSpin1)
 ON_NOTIFY(NM_OUTOFMEMORY, IDC_SPIN2, &CThreadsPrioritiesDlg::OnNMOutofmemorySpin2)
+ON_WM_VSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -131,13 +134,13 @@ BOOL CThreadsPrioritiesDlg::OnInitDialog()
 	progress1.SetPos(0);
 	progress2.SetRange(0, 100);
 	progress2.SetPos(0);
-	cSpin1.SetRange(0, 4);	   
+	cSpin1.SetRange(0, 5);	   
 	cSpin1.SetPos(0);
-	priority1 = cSpin1.GetPos();
+	//priority1 = cSpin1.GetPos();
 	//cSpin1.SetBuddy(priority1);
-	cSpin2.SetRange(0, 4);		    
+	cSpin2.SetRange(0, 5);		    
 	cSpin2.SetPos(0);
-	priority2 = cSpin2.GetPos();
+	//priority2 = cSpin2.GetPos();
 	SetTimer(IDC_TIMER, 200, NULL);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -197,7 +200,7 @@ HCURSOR CThreadsPrioritiesDlg::OnQueryDragIcon()
 void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 {
 	// TODO: Add your control notification handler code here
-	UpdateData(true);
+	//UpdateData(true);
 	if (isThRuns)
 	{
 		isThRuns = false;
@@ -205,8 +208,7 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 		for (int i = 0; i < NUM_OF_THRS; i++)
 		{
 			TerminateThread(hThreads[i], 0);
-
-			WaitForSingleObject(hThreads[i], INFINITE);
+			WaitForSingleObject(hThreads[i], INFINITE);	
 			CloseHandle(hThreads[i]);
 			hThreads[i] = 0;
 		}
@@ -238,7 +240,22 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 			hThreads.push_back(hThread);
 		}
 
-		for (int i = 0; i < NUM_OF_THRS; i++) { ResumeThread(hThreads[i]); }
+		for (int i = 0; i < NUM_OF_THRS; i++) 
+		{
+			ResumeThread(hThreads[i]);
+			DWORD ThPr;
+			int* prior = new int[2]{ priority1, priority2 };
+
+			switch (prior[i])
+			{
+			case 4: ThPr = THREAD_PRIORITY_HIGHEST;			break;
+			case 3: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
+			case 2: ThPr = THREAD_PRIORITY_NORMAL;			break;
+			case 1: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
+			case 0: ThPr = THREAD_PRIORITY_LOWEST;			break;
+			}
+			SetThreadPriority(hThreads[i], ThPr);
+		}
 		isThRuns = true;
 	}
 	UpdateData(false);
@@ -255,18 +272,9 @@ void CThreadsPrioritiesDlg::OnBnClickedSleep2()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
-	if (isThRuns) { theApp.ThreadSleeps[0] = isSlept2; }
+	if (isThRuns) { theApp.ThreadSleeps[1] = isSlept2; }
 }
 
-void CThreadsPrioritiesDlg::OnBnClickedPriority1()
-{
-	// TODO: Add your control notification handler code here
-}
-
-void CThreadsPrioritiesDlg::OnBnClickedPriority2()
-{
-	// TODO: Add your control notification handler code here
-}
 
 
 void CThreadsPrioritiesDlg::OnTimer(UINT_PTR nIDEvent)
@@ -295,67 +303,48 @@ void CThreadsPrioritiesDlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 
-//void CThreadsPrioritiesDlg::OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult)
-//{
-//	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-//	// TODO: Add your control notification handler code here
-//	UpdateData(true);
-//	priority1 = cSpin1.GetPos();
-//	UpdateData(false);
-//	*pResult = 1;
-//}
-
-
-void CThreadsPrioritiesDlg::OnDeltaposSpin2(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-	// TODO: Add your control notification handler code here
-	priority2 = cSpin2.GetPos() - 65536;
-	if (isThRuns)
-	{
-		DWORD ThPr = THREAD_PRIORITY_NORMAL;
-		switch (cSpin2.GetPos())
-		{
-		case 0: ThPr = THREAD_PRIORITY_HIGHEST;			break;
-		case 1: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
-		case 3: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
-		case 4: ThPr = THREAD_PRIORITY_LOWEST;			break;
-		}
-		SetThreadPriority(hThreads[1], ThPr);
-	}
-	UpdateData(false);
-	*pResult = 0;
-}
-
-
-void CThreadsPrioritiesDlg::OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-	// TODO: Add your control notification handler code here
-	priority1 = cSpin1.GetPos() - 65536;
-	if (isThRuns)
-	{
-		DWORD ThPr = THREAD_PRIORITY_NORMAL;
-		switch (priority1)
-		{
-		case 0: ThPr = THREAD_PRIORITY_HIGHEST;			break;
-		case 1: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
-		case 3: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
-		case 4: ThPr = THREAD_PRIORITY_LOWEST;			break;
-		}
-		SetThreadPriority(hThreads[0], ThPr);
-	}
-	UpdateData(false);
-	*pResult = 0;
-}
-
 
 void CThreadsPrioritiesDlg::OnNMOutofmemorySpin2(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(TRUE);
-	priority1 = cSpin2.GetPos();
+	priority2 = cSpin2.GetPos();
 	UpdateData(FALSE);
 
 	*pResult = 0;
+}
+
+
+void CThreadsPrioritiesDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	// TODO: Add your message handler code here and/or call default
+	priority1 = cSpin1.GetPos() - 65536;
+	priority2 = cSpin2.GetPos() - 65536;
+
+	if (isThRuns)
+	{
+		DWORD ThPr = THREAD_PRIORITY_LOWEST;
+		switch (priority1)
+		{
+		case 4: ThPr = THREAD_PRIORITY_HIGHEST;			break;
+		case 3: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
+		case 2: ThPr = THREAD_PRIORITY_NORMAL;			break;
+		case 1: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
+		case 0: ThPr = THREAD_PRIORITY_LOWEST;			break;
+		}
+		SetThreadPriority(hThreads[0], ThPr);
+
+		ThPr = THREAD_PRIORITY_LOWEST;
+		switch (priority2)
+		{
+		case 4: ThPr = THREAD_PRIORITY_HIGHEST;			break;
+		case 3: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
+		case 2: ThPr = THREAD_PRIORITY_NORMAL;			break;
+		case 1: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
+		case 0: ThPr = THREAD_PRIORITY_LOWEST;			break;
+		}
+		SetThreadPriority(hThreads[1], ThPr);
+	}
+	UpdateData(FALSE);
+	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }

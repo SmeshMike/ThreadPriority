@@ -104,14 +104,14 @@ BOOL CThreadsPrioritiesApp::InitInstance()
 	return FALSE;
 }
 
-int __stdcall ThreadFunc(int number)
+void* __stdcall ThreadFunc(int number)
 {
 	double parameter = 1.0;
 	while (parameter > 0)
 	{
 		// Рабочая часть потока:
 		parameter = cos(parameter);
-		parameter = sinh(parameter);
+		parameter = sin(parameter);
 
 		// Управляемое прерывание потока:
 		if (theApp.ThreadSleeps[number]) { Sleep(0); }
