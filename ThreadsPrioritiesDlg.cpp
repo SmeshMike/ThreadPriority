@@ -131,11 +131,11 @@ BOOL CThreadsPrioritiesDlg::OnInitDialog()
 	progress1.SetPos(0);
 	progress2.SetRange(0, 100);
 	progress2.SetPos(0);
-	cSpin1.SetRange(0, 4);	    // диапазон
+	cSpin1.SetRange(0, 4);	   
 	cSpin1.SetPos(0);
 	priority1 = cSpin1.GetPos();
 	//cSpin1.SetBuddy(priority1);
-	cSpin2.SetRange(0, 4);		    // диапазон
+	cSpin2.SetRange(0, 4);		    
 	cSpin2.SetPos(0);
 	priority2 = cSpin2.GetPos();
 	SetTimer(IDC_TIMER, 200, NULL);
@@ -204,7 +204,6 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 
 		for (int i = 0; i < NUM_OF_THRS; i++)
 		{
-			// Остановка вторичных потоков:
 			TerminateThread(hThreads[i], 0);
 
 			WaitForSingleObject(hThreads[i], INFINITE);
@@ -220,7 +219,6 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 	{
 		for (int i = 0; i < NUM_OF_THRS; i++)
 		{
-			// Установка начальных значений:
 			theApp.ThreadVar.push_back(0);
 			switch (i)
 			{
@@ -229,7 +227,6 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 			default: theApp.ThreadSleeps.push_back(false); break;
 			}
 
-			// Создание вторичных потоков:
 			DWORD dwThrIDs;
 			HANDLE hThread = CreateThread(
 				NULL, 0,
@@ -241,7 +238,6 @@ void CThreadsPrioritiesDlg::OnBnClickedRunstop()
 			hThreads.push_back(hThread);
 		}
 
-		// Запуск вторичных потоков:
 		for (int i = 0; i < NUM_OF_THRS; i++) { ResumeThread(hThreads[i]); }
 		isThRuns = true;
 	}
@@ -252,38 +248,15 @@ void CThreadsPrioritiesDlg::OnBnClickedSleep1()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
-	if (isThRuns)
-	{
-		// Приоритет первого процесса:
-		//DWORD ThPr = THREAD_PRIORITY_NORMAL;
-		//switch (mSlider_T1.GetPos())
-		//{
-		//case 0: ThPr = THREAD_PRIORITY_HIGHEST;			break;
-		//case 1: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
-		//case 3: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
-		//case 4: ThPr = THREAD_PRIORITY_LOWEST;			break;
-		//}
-		//SetThreadPriority(hThreads[0], ThPr);
-
-		//// Приоритет второго процесса:
-		//ThPr = THREAD_PRIORITY_NORMAL;
-		//switch (mSlider_T2.GetPos())
-		//{
-		//case 0: ThPr = THREAD_PRIORITY_HIGHEST;			break;
-		//case 1: ThPr = THREAD_PRIORITY_ABOVE_NORMAL;	break;
-		//case 3: ThPr = THREAD_PRIORITY_BELOW_NORMAL;	break;
-		//case 4: ThPr = THREAD_PRIORITY_LOWEST;			break;
-		//}
-		//SetThreadPriority(hThreads[1], ThPr);
-	}
-	UpdateData(false);
+	if (isThRuns) { theApp.ThreadSleeps[0] = isSlept1; }
 }
 
 void CThreadsPrioritiesDlg::OnBnClickedSleep2()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
+	if (isThRuns) { theApp.ThreadSleeps[0] = isSlept2; }
 }
-
 
 void CThreadsPrioritiesDlg::OnBnClickedPriority1()
 {
@@ -302,11 +275,9 @@ void CThreadsPrioritiesDlg::OnTimer(UINT_PTR nIDEvent)
 	UpdateData(true);
 	if (isThRuns)
 	{
-		// Обмен информацией с вторичными потоками:
 		double ThreadResult1 = (double)InterlockedExchange(&(theApp.ThreadVar[0]), 0);
 		double ThreadResult2 = (double)InterlockedExchange(&(theApp.ThreadVar[1]), 0);
 
-		// Вывод информации о производительности в окно:
 		ThreadResult1 = 100.0 * ThreadResult1 / (ThreadResult1 + ThreadResult2);
 		ThreadResult2 = 100.0 - ThreadResult1;
 
@@ -342,8 +313,6 @@ void CThreadsPrioritiesDlg::OnDeltaposSpin2(NMHDR* pNMHDR, LRESULT* pResult)
 	priority2 = cSpin2.GetPos() - 65536;
 	if (isThRuns)
 	{
-
-		//// Приоритет второго процесса:
 		DWORD ThPr = THREAD_PRIORITY_NORMAL;
 		switch (cSpin2.GetPos())
 		{
@@ -366,7 +335,6 @@ void CThreadsPrioritiesDlg::OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult)
 	priority1 = cSpin1.GetPos() - 65536;
 	if (isThRuns)
 	{
-		 //Приоритет первого процесса:
 		DWORD ThPr = THREAD_PRIORITY_NORMAL;
 		switch (priority1)
 		{
